@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Icon from "@/components/ui/icon";
 
 const HERO_IMAGE = "https://cdn.poehali.dev/projects/dcc07699-698f-4c75-8dca-b4ccfdc98ed3/files/a97aaff0-c64b-476e-b9a1-bcfb144ba0f6.jpg";
@@ -161,8 +161,11 @@ const Index = () => {
   const [pickedCards, setPickedCards] = useState<number[]>([]);
   const [flippedCards, setFlippedCards] = useState<boolean[]>([false, false, false]);
   const [drawnCards, setDrawnCards] = useState<typeof PAST_CARDS>([]);
-  const [freeForm, setFreeForm] = useState({ name: "", birthdate: "", birthtime: "", birthcity: "" });
+  const [freeForm, setFreeForm] = useState({ name: "", birthdate: "", birthtime: "", birthcity: "", phone: "" });
   const [freeFormError, setFreeFormError] = useState("");
+  const [freeDeadline, setFreeDeadline] = useState<number | null>(null);
+  const [freeTimeLeft, setFreeTimeLeft] = useState<number>(3600);
+  const [freeExpired, setFreeExpired] = useState(false);
 
   const shuffleDeck = () => {
     setShuffling(true);
@@ -186,12 +189,33 @@ const Index = () => {
     }
   };
 
+  useEffect(() => {
+    if (!freeDeadline) return;
+    const tick = setInterval(() => {
+      const left = Math.max(0, Math.round((freeDeadline - Date.now()) / 1000));
+      setFreeTimeLeft(left);
+      if (left === 0) {
+        setFreeExpired(true);
+        clearInterval(tick);
+      }
+    }, 1000);
+    return () => clearInterval(tick);
+  }, [freeDeadline]);
+
   const submitFreeForm = () => {
     if (!freeForm.name.trim() || !freeForm.birthdate || !freeForm.birthcity.trim()) {
       setFreeFormError("Пожалуйста, заполните имя, дату рождения и город");
       return;
     }
+    if (!freeForm.phone.trim()) {
+      setFreeFormError("Укажите номер телефона — мы свяжемся с вами после расклада");
+      return;
+    }
     setFreeFormError("");
+    const deadline = Date.now() + 60 * 60 * 1000;
+    setFreeDeadline(deadline);
+    setFreeTimeLeft(3600);
+    setFreeExpired(false);
     setFreeStep("shuffle");
   };
 
@@ -201,8 +225,17 @@ const Index = () => {
     setPickedCards([]);
     setFlippedCards([false, false, false]);
     setDrawnCards([]);
-    setFreeForm({ name: "", birthdate: "", birthtime: "", birthcity: "" });
+    setFreeForm({ name: "", birthdate: "", birthtime: "", birthcity: "", phone: "" });
     setFreeFormError("");
+    setFreeDeadline(null);
+    setFreeTimeLeft(3600);
+    setFreeExpired(false);
+  };
+
+  const freeTimerDisplay = () => {
+    const m = Math.floor(freeTimeLeft / 60).toString().padStart(2, "0");
+    const s = (freeTimeLeft % 60).toString().padStart(2, "0");
+    return `${m}:${s}`;
   };
 
   const navItems: { id: Section; label: string }[] = [
@@ -918,8 +951,46 @@ const Index = () => {
               </p>
             </div>
 
+            {/* TIMER BAR — shown during shuffle/pick/reveal */}
+            {freeDeadline && !freeExpired && ["shuffle", "pick", "reveal"].includes(freeStep) && (
+              <div className="flex items-center justify-center gap-3 mb-10 animate-fade-in">
+                <div
+                  className="flex items-center gap-3 px-5 py-3"
+                  style={{ border: "1px solid var(--gold-dim)", background: "rgba(201,168,76,0.06)" }}
+                >
+                  <Icon name="Clock" size={14} style={{ color: "var(--gold)" }} />
+                  <span className="font-montserrat text-xs" style={{ color: "var(--cream-dim)", letterSpacing: "0.1em" }}>
+                    РАСКЛАД ДЕЙСТВИТЕЛЕН ЕЩЁ
+                  </span>
+                  <span
+                    className="font-cormorant text-xl"
+                    style={{ color: freeTimeLeft < 300 ? "#c0392b" : "var(--gold)", minWidth: "52px", textAlign: "center" }}
+                  >
+                    {freeTimerDisplay()}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* EXPIRED */}
+            {freeExpired && (
+              <div className="text-center animate-fade-up py-10">
+                <div
+                  className="inline-block p-10 max-w-sm"
+                  style={{ border: "1px solid #c0392b", background: "rgba(192,57,43,0.06)" }}
+                >
+                  <Icon name="TimerOff" size={32} style={{ color: "#c0392b", margin: "0 auto 16px" }} />
+                  <h3 className="font-cormorant text-2xl font-light mb-3">Время вышло</h3>
+                  <p className="font-montserrat text-xs mb-6" style={{ color: "var(--cream-dim)", fontWeight: 300, lineHeight: "1.7" }}>
+                    Один час на расклад истёк. Начните заново, чтобы получить своё послание.
+                  </p>
+                  <button className="btn-gold-fill" onClick={resetFree}>Начать заново</button>
+                </div>
+              </div>
+            )}
+
             {/* INTRO */}
-            {freeStep === "intro" && (
+            {!freeExpired && freeStep === "intro" && (
               <div className="text-center animate-fade-up">
                 <div className="inline-block p-10 mb-10" style={{ border: "1px solid var(--dark-border)" }}>
                   <div className="relative w-32 h-44 mx-auto mb-8">
@@ -961,7 +1032,7 @@ const Index = () => {
             )}
 
             {/* FORM */}
-            {freeStep === "form" && (
+            {!freeExpired && freeStep === "form" && (
               <div className="max-w-lg mx-auto animate-fade-up">
                 <div className="p-8 md:p-10" style={{ border: "1px solid var(--dark-border)" }}>
                   <div className="text-center mb-8">
@@ -1029,6 +1100,23 @@ const Index = () => {
                         onChange={(e) => setFreeForm({ ...freeForm, birthcity: e.target.value })}
                       />
                     </div>
+
+                    {/* Phone */}
+                    <div>
+                      <label className="font-montserrat text-xs mb-2 block" style={{ color: "var(--cream-dim)", letterSpacing: "0.12em" }}>
+                        НОМЕР ТЕЛЕФОНА <span style={{ color: "var(--gold)" }}>*</span>
+                      </label>
+                      <input
+                        className="input-mystical"
+                        placeholder="+7 (___) ___-__-__"
+                        type="tel"
+                        value={freeForm.phone}
+                        onChange={(e) => setFreeForm({ ...freeForm, phone: e.target.value })}
+                      />
+                      <p className="font-montserrat mt-2" style={{ fontSize: "10px", color: "var(--cream-dim)", opacity: 0.6 }}>
+                        После расклада мы свяжемся с вами для обсуждения результатов
+                      </p>
+                    </div>
                   </div>
 
                   {freeFormError && (
@@ -1058,7 +1146,7 @@ const Index = () => {
             )}
 
             {/* SHUFFLE */}
-            {freeStep === "shuffle" && (
+            {!freeExpired && freeStep === "shuffle" && (
               <div className="text-center animate-fade-up">
                 <p className="font-cormorant text-xl italic mb-10" style={{ color: "var(--cream-dim)" }}>
                   Закройте глаза. Думайте о своём прошлом...
@@ -1100,7 +1188,7 @@ const Index = () => {
             )}
 
             {/* PICK */}
-            {freeStep === "pick" && (
+            {!freeExpired && freeStep === "pick" && (
               <div className="animate-fade-up">
                 <p className="font-cormorant text-2xl italic text-center mb-2" style={{ color: "var(--cream-dim)" }}>
                   Переверните три карты
@@ -1191,7 +1279,7 @@ const Index = () => {
             )}
 
             {/* REVEAL */}
-            {freeStep === "reveal" && drawnCards.length === 3 && (
+            {!freeExpired && freeStep === "reveal" && drawnCards.length === 3 && (
               <div className="animate-fade-up">
                 <div className="text-center mb-12">
                   <p className="font-montserrat text-xs mb-3" style={{ color: "var(--gold)", letterSpacing: "0.15em" }}>
