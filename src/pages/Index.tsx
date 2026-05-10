@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Icon from "@/components/ui/icon";
 
 const HERO_IMAGE = "https://cdn.poehali.dev/projects/dcc07699-698f-4c75-8dca-b4ccfdc98ed3/files/a97aaff0-c64b-476e-b9a1-bcfb144ba0f6.jpg";
@@ -116,6 +116,22 @@ const Index = () => {
   const [freeFormError, setFreeFormError] = useState("");
   const [freeSending, setFreeSending] = useState(false);
 
+  // Captcha
+  const genCaptcha = () => {
+    const a = Math.floor(Math.random() * 9) + 1;
+    const b = Math.floor(Math.random() * 9) + 1;
+    return { a, b, answer: a + b };
+  };
+  const [captcha, setCaptcha] = useState(genCaptcha);
+  const [captchaInput, setCaptchaInput] = useState("");
+  const [captchaError, setCaptchaError] = useState(false);
+  const submitAttemptRef = useRef(0);
+
+  useEffect(() => {
+    setCaptcha(genCaptcha());
+    setCaptchaInput("");
+  }, [freeStep]);
+
   const submitFreeForm = async () => {
     if (!freeForm.name.trim() || !freeForm.birthdate || !freeForm.birthcity.trim()) {
       setFreeFormError("Пожалуйста, заполните имя, дату рождения и город");
@@ -125,6 +141,14 @@ const Index = () => {
       setFreeFormError("Укажите номер телефона — мы свяжемся с вами");
       return;
     }
+    if (parseInt(captchaInput) !== captcha.answer) {
+      setCaptchaError(true);
+      setCaptcha(genCaptcha());
+      setCaptchaInput("");
+      submitAttemptRef.current += 1;
+      return;
+    }
+    setCaptchaError(false);
     setFreeFormError("");
     setFreeSending(true);
     try {
@@ -152,6 +176,9 @@ const Index = () => {
     setFreeForm({ name: "", birthdate: "", birthtime: "", birthcity: "", phone: "" });
     setFreeFormError("");
     setFreeSending(false);
+    setCaptchaInput("");
+    setCaptchaError(false);
+    setCaptcha(genCaptcha());
   };
 
   const navItems: { id: Section; label: string }[] = [
@@ -376,6 +403,28 @@ const Index = () => {
                           <input className="input-mystical" placeholder="Например: Москва" value={freeForm.birthcity}
                             onChange={(e) => setFreeForm({ ...freeForm, birthcity: e.target.value })} />
                         </div>
+                      </div>
+
+                      {/* Captcha */}
+                      <div
+                        className="flex items-center gap-3 p-3 mt-1"
+                        style={{ border: "1px solid var(--dark-border)", background: "rgba(201,168,76,0.03)" }}
+                      >
+                        <span className="font-montserrat text-xs flex-shrink-0" style={{ color: "var(--cream-dim)", letterSpacing: "0.05em" }}>
+                          Сколько будет{" "}
+                          <span style={{ color: "var(--gold)", fontWeight: 600 }}>{captcha.a} + {captcha.b}</span>?
+                        </span>
+                        <input
+                          className="input-mystical"
+                          style={{ width: "70px", textAlign: "center", padding: "6px 10px" }}
+                          placeholder="?"
+                          type="number"
+                          value={captchaInput}
+                          onChange={(e) => { setCaptchaInput(e.target.value); setCaptchaError(false); }}
+                        />
+                        {captchaError && (
+                          <span className="font-montserrat text-xs" style={{ color: "#c0392b" }}>Неверно</span>
+                        )}
                       </div>
 
                       {freeFormError && (
@@ -890,6 +939,29 @@ const Index = () => {
                         onChange={(e) => setFreeForm({ ...freeForm, birthcity: e.target.value })}
                       />
                     </div>
+                  </div>
+
+                  {/* Captcha */}
+                  <div
+                    className="flex items-center gap-4 p-4 mt-6"
+                    style={{ border: "1px solid var(--dark-border)", background: "rgba(201,168,76,0.03)" }}
+                  >
+                    <Icon name="ShieldCheck" size={16} style={{ color: "var(--gold)", flexShrink: 0 }} />
+                    <span className="font-montserrat text-xs" style={{ color: "var(--cream-dim)", letterSpacing: "0.05em" }}>
+                      Сколько будет{" "}
+                      <span style={{ color: "var(--gold)", fontWeight: 600 }}>{captcha.a} + {captcha.b}</span>?
+                    </span>
+                    <input
+                      className="input-mystical"
+                      style={{ width: "80px", textAlign: "center" }}
+                      placeholder="?"
+                      type="number"
+                      value={captchaInput}
+                      onChange={(e) => { setCaptchaInput(e.target.value); setCaptchaError(false); }}
+                    />
+                    {captchaError && (
+                      <span className="font-montserrat text-xs" style={{ color: "#c0392b" }}>Неверно</span>
+                    )}
                   </div>
 
                   {freeFormError && (
