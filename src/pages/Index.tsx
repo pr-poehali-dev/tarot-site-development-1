@@ -266,53 +266,141 @@ const Index = () => {
             style={{ background: "linear-gradient(to right, rgba(14,11,8,0.97) 45%, rgba(14,11,8,0.4) 100%)" }}
           />
 
-          <div className="relative z-10 container mx-auto px-6 md:px-12 pt-24">
-            <div className="max-w-2xl">
-              <p className="star-deco mb-6 animate-fade-in" style={{ animationDelay: "0.1s", opacity: 0 }}>
-                ✦ ✦ ✦
-              </p>
-              <p className="nav-link mb-4 animate-fade-up" style={{ color: "var(--gold)", opacity: 0, animationDelay: "0.2s" }}>
-                Профессиональный таролог
-              </p>
-              <h1
-                className="font-cormorant text-6xl md:text-8xl font-light leading-none mb-6 animate-fade-up"
-                style={{ opacity: 0, animationDelay: "0.3s" }}
-              >
-                Откройте<br />
-                <em className="gold-shimmer">тайны</em><br />
-                своей судьбы
-              </h1>
-              <div className="gold-line-left mb-6 animate-fade-up" style={{ opacity: 0, animationDelay: "0.4s" }} />
-              <p
-                className="font-montserrat text-sm leading-relaxed mb-10 max-w-md animate-fade-up"
-                style={{ color: "var(--cream-dim)", opacity: 0, animationDelay: "0.5s", fontWeight: 300 }}
-              >
-                Более 10 лет практики. Индивидуальные консультации, которые помогают найти ответы на важнейшие жизненные вопросы.
-              </p>
-              <div className="flex flex-wrap gap-4 animate-fade-up" style={{ opacity: 0, animationDelay: "0.6s" }}>
-                <button className="btn-gold-fill" onClick={() => navigate("contact")}>
-                  Записаться на консультацию
-                </button>
-                <button className="btn-gold" onClick={() => navigate("services")}>
-                  Узнать об услугах
-                </button>
+          <div className="relative z-10 container mx-auto px-6 md:px-12 pt-24 pb-16">
+            <div className="grid md:grid-cols-2 gap-12 md:gap-16 items-center">
+
+              {/* Left — hero text */}
+              <div>
+                <p className="star-deco mb-6 animate-fade-in" style={{ animationDelay: "0.1s", opacity: 0 }}>
+                  ✦ ✦ ✦
+                </p>
+                <p className="nav-link mb-4 animate-fade-up" style={{ color: "var(--gold)", opacity: 0, animationDelay: "0.2s" }}>
+                  Профессиональный таролог
+                </p>
+                <h1
+                  className="font-cormorant text-5xl md:text-7xl font-light leading-none mb-6 animate-fade-up"
+                  style={{ opacity: 0, animationDelay: "0.3s" }}
+                >
+                  Откройте<br />
+                  <em className="gold-shimmer">тайны</em><br />
+                  своей судьбы
+                </h1>
+                <div className="gold-line-left mb-6 animate-fade-up" style={{ opacity: 0, animationDelay: "0.4s" }} />
+                <p
+                  className="font-montserrat text-sm leading-relaxed mb-10 max-w-md animate-fade-up"
+                  style={{ color: "var(--cream-dim)", opacity: 0, animationDelay: "0.5s", fontWeight: 300 }}
+                >
+                  Более 10 лет практики. Индивидуальные консультации, которые помогают найти ответы на важнейшие жизненные вопросы.
+                </p>
+                <div className="flex flex-wrap gap-4 animate-fade-up" style={{ opacity: 0, animationDelay: "0.6s" }}>
+                  <button className="btn-gold-fill" onClick={() => navigate("contact")}>
+                    Записаться на консультацию
+                  </button>
+                  <button className="btn-gold" onClick={() => navigate("services")}>
+                    Узнать об услугах
+                  </button>
+                </div>
+                <div
+                  className="flex gap-10 mt-12 pt-8 animate-fade-up"
+                  style={{ opacity: 0, animationDelay: "0.7s", borderTop: "1px solid var(--dark-border)" }}
+                >
+                  {[
+                    { num: "10+", label: "лет практики" },
+                    { num: "500+", label: "консультаций" },
+                    { num: "98%", label: "довольных клиентов" },
+                  ].map((s) => (
+                    <div key={s.label}>
+                      <p className="font-cormorant text-3xl" style={{ color: "var(--gold)" }}>{s.num}</p>
+                      <p className="font-montserrat text-xs mt-1" style={{ color: "var(--cream-dim)", letterSpacing: "0.1em" }}>{s.label}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
 
-              <div
-                className="flex gap-12 mt-16 pt-8 animate-fade-up"
-                style={{ opacity: 0, animationDelay: "0.7s", borderTop: "1px solid var(--dark-border)" }}
-              >
-                {[
-                  { num: "10+", label: "лет практики" },
-                  { num: "500+", label: "консультаций" },
-                  { num: "98%", label: "довольных клиентов" },
-                ].map((s) => (
-                  <div key={s.label}>
-                    <p className="font-cormorant text-3xl" style={{ color: "var(--gold)" }}>{s.num}</p>
-                    <p className="font-montserrat text-xs mt-1" style={{ color: "var(--cream-dim)", letterSpacing: "0.1em" }}>{s.label}</p>
-                  </div>
-                ))}
+              {/* Right — free reading form */}
+              <div className="animate-fade-up" style={{ opacity: 0, animationDelay: "0.5s" }}>
+                <div className="relative p-6 md:p-8" style={{ border: "1px solid var(--gold-dim)", background: "rgba(14,11,8,0.75)", backdropFilter: "blur(12px)" }}>
+                  {/* Corner accents */}
+                  <div className="absolute top-0 left-0 w-5 h-5" style={{ borderTop: "1px solid var(--gold)", borderLeft: "1px solid var(--gold)" }} />
+                  <div className="absolute top-0 right-0 w-5 h-5" style={{ borderTop: "1px solid var(--gold)", borderRight: "1px solid var(--gold)" }} />
+                  <div className="absolute bottom-0 left-0 w-5 h-5" style={{ borderBottom: "1px solid var(--gold)", borderLeft: "1px solid var(--gold)" }} />
+                  <div className="absolute bottom-0 right-0 w-5 h-5" style={{ borderBottom: "1px solid var(--gold)", borderRight: "1px solid var(--gold)" }} />
+
+                  {freeStep === "form" ? (
+                    <>
+                      <div className="text-center mb-6">
+                        <span className="font-montserrat text-xs" style={{ color: "var(--gold)", letterSpacing: "0.18em" }}>БЕСПЛАТНО</span>
+                        <h2 className="font-cormorant text-3xl font-light mt-1 mb-1">Расклад на прошлое</h2>
+                        <p className="font-montserrat text-xs" style={{ color: "var(--cream-dim)", fontWeight: 300 }}>
+                          Оставьте данные — свяжусь лично
+                        </p>
+                      </div>
+
+                      <div className="space-y-4">
+                        <div>
+                          <label className="font-montserrat text-xs mb-1 block" style={{ color: "var(--cream-dim)", letterSpacing: "0.1em" }}>
+                            ИМЯ <span style={{ color: "var(--gold)" }}>*</span>
+                          </label>
+                          <input className="input-mystical" placeholder="Как вас зовут" value={freeForm.name}
+                            onChange={(e) => setFreeForm({ ...freeForm, name: e.target.value })} />
+                        </div>
+                        <div>
+                          <label className="font-montserrat text-xs mb-1 block" style={{ color: "var(--cream-dim)", letterSpacing: "0.1em" }}>
+                            ТЕЛЕФОН <span style={{ color: "var(--gold)" }}>*</span>
+                          </label>
+                          <input className="input-mystical" placeholder="+7 (___) ___-__-__" type="tel" value={freeForm.phone}
+                            onChange={(e) => setFreeForm({ ...freeForm, phone: e.target.value })} />
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="font-montserrat text-xs mb-1 block" style={{ color: "var(--cream-dim)", letterSpacing: "0.1em" }}>
+                              ДАТА РОЖ. <span style={{ color: "var(--gold)" }}>*</span>
+                            </label>
+                            <input className="input-mystical" type="date" value={freeForm.birthdate}
+                              onChange={(e) => setFreeForm({ ...freeForm, birthdate: e.target.value })}
+                              style={{ colorScheme: "dark" }} />
+                          </div>
+                          <div>
+                            <label className="font-montserrat text-xs mb-1 block" style={{ color: "var(--cream-dim)", letterSpacing: "0.1em" }}>
+                              ВРЕМЯ
+                            </label>
+                            <input className="input-mystical" type="time" value={freeForm.birthtime}
+                              onChange={(e) => setFreeForm({ ...freeForm, birthtime: e.target.value })}
+                              style={{ colorScheme: "dark" }} />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="font-montserrat text-xs mb-1 block" style={{ color: "var(--cream-dim)", letterSpacing: "0.1em" }}>
+                            ГОРОД РОЖДЕНИЯ <span style={{ color: "var(--gold)" }}>*</span>
+                          </label>
+                          <input className="input-mystical" placeholder="Например: Москва" value={freeForm.birthcity}
+                            onChange={(e) => setFreeForm({ ...freeForm, birthcity: e.target.value })} />
+                        </div>
+                      </div>
+
+                      {freeFormError && (
+                        <p className="font-montserrat text-xs mt-3" style={{ color: "#c0392b" }}>{freeFormError}</p>
+                      )}
+
+                      <button className="btn-gold-fill w-full mt-5" onClick={submitFreeForm}
+                        disabled={freeSending} style={{ opacity: freeSending ? 0.6 : 1 }}>
+                        {freeSending ? "Отправляем..." : "Получить бесплатный расклад"}
+                      </button>
+                    </>
+                  ) : (
+                    <div className="text-center py-4">
+                      <span className="font-cormorant text-4xl block mb-4" style={{ color: "var(--gold)" }}>✦</span>
+                      <h3 className="font-cormorant text-2xl font-light mb-3">Заявка принята</h3>
+                      <p className="font-montserrat text-xs mb-5" style={{ color: "var(--cream-dim)", fontWeight: 300, lineHeight: "1.7" }}>
+                        {freeForm.name ? `${freeForm.name}, я` : "Я"} свяжусь с вами по номеру{" "}
+                        <span style={{ color: "var(--gold)" }}>{freeForm.phone}</span> в ближайшее время.
+                      </p>
+                      <button className="btn-gold" onClick={resetFree}>Отправить новую заявку</button>
+                    </div>
+                  )}
+                </div>
               </div>
+
             </div>
           </div>
 
