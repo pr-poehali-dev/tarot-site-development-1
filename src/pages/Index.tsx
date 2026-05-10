@@ -93,7 +93,54 @@ const REVIEWS = [
 const SCHEDULE = ["Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"];
 const TIMES = ["10:00", "11:30", "13:00", "14:30", "16:00", "17:30", "19:00", "20:30"];
 
-type Section = "home" | "about" | "services" | "portfolio" | "reviews" | "contact" | "cabinet";
+type Section = "home" | "about" | "services" | "portfolio" | "reviews" | "contact" | "cabinet" | "free";
+
+const PAST_CARDS = [
+  {
+    name: "Луна",
+    symbol: "☽",
+    meaning: "Скрытые страхи и иллюзии",
+    description: "В вашем прошлом присутствовали периоды неопределённости и самообмана. Что-то важное оставалось в тени — возможно, вы сами не хотели видеть правду. Луна указывает на подавленные эмоции и интуицию, которую вы игнорировали.",
+    advice: "Признайте то, что долго скрывали от себя.",
+  },
+  {
+    name: "Колесо Фортуны",
+    symbol: "☸",
+    meaning: "Переломный момент судьбы",
+    description: "Прошлое было насыщено переменами — взлётами и падениями, которые казались неподвластными вам. Эти циклы привели вас именно туда, где вы находитесь сейчас. Ничто не случайно.",
+    advice: "Каждый поворот колеса вёл вас к нынешней точке.",
+  },
+  {
+    name: "Звезда",
+    symbol: "✦",
+    meaning: "Исцеление и надежда",
+    description: "Среди трудностей прошлого была искра света — моменты подлинной надежды и восстановления. Звезда говорит о том, что вы пережили тёмные периоды и сохранили веру в лучшее.",
+    advice: "Ваша стойкость в прошлом — ваша сила в настоящем.",
+  },
+  {
+    name: "Отшельник",
+    symbol: "🕯",
+    meaning: "Путь внутреннего поиска",
+    description: "Вы проходили через периоды одиночества и уединения. Это было необходимо для глубокого самопознания. Отшельник в прошлом — признак мудрости, накопленной в тишине.",
+    advice: "Знания, найденные в уединении, принадлежат только вам.",
+  },
+  {
+    name: "Сила",
+    symbol: "∞",
+    meaning: "Внутренняя мощь и терпение",
+    description: "Прошлое требовало от вас огромной внутренней силы. Вы справлялись с ситуациями, которые казались непосильными. Эта карта — свидетельство вашего мужества.",
+    advice: "Вы сильнее, чем думаете — прошлое это доказало.",
+  },
+  {
+    name: "Жрица",
+    symbol: "𑁍",
+    meaning: "Тайное знание и интуиция",
+    description: "В прошлом вы обладали глубокой интуицией, которую, возможно, не всегда слушали. Жрица хранит тайны — некоторые события были важнее, чем казались на поверхности.",
+    advice: "Вернитесь к тому, что ощущали, но не высказывали.",
+  },
+];
+
+const CARD_BACKS = ["I", "II", "III"];
 
 const Index = () => {
   const [activeSection, setActiveSection] = useState<Section>("home");
@@ -108,10 +155,48 @@ const Index = () => {
   const [bookingForm, setBookingForm] = useState({ name: "", email: "", phone: "", comment: "" });
   const [contactForm, setContactForm] = useState({ name: "", email: "", message: "" });
 
+  // Free reading state
+  const [freeStep, setFreeStep] = useState<"intro" | "shuffle" | "pick" | "reveal">("intro");
+  const [shuffling, setShuffling] = useState(false);
+  const [pickedCards, setPickedCards] = useState<number[]>([]);
+  const [flippedCards, setFlippedCards] = useState<boolean[]>([false, false, false]);
+  const [drawnCards, setDrawnCards] = useState<typeof PAST_CARDS>([]);
+
+  const shuffleDeck = () => {
+    setShuffling(true);
+    setTimeout(() => {
+      setShuffling(false);
+      const shuffled = [...PAST_CARDS].sort(() => Math.random() - 0.5).slice(0, 3);
+      setDrawnCards(shuffled);
+      setFreeStep("pick");
+      setPickedCards([]);
+      setFlippedCards([false, false, false]);
+    }, 1800);
+  };
+
+  const flipCard = (idx: number) => {
+    if (flippedCards[idx]) return;
+    const next = [...flippedCards];
+    next[idx] = true;
+    setFlippedCards(next);
+    if (next.filter(Boolean).length === 3) {
+      setTimeout(() => setFreeStep("reveal"), 400);
+    }
+  };
+
+  const resetFree = () => {
+    setFreeStep("intro");
+    setShuffling(false);
+    setPickedCards([]);
+    setFlippedCards([false, false, false]);
+    setDrawnCards([]);
+  };
+
   const navItems: { id: Section; label: string }[] = [
     { id: "home", label: "Главная" },
     { id: "about", label: "О мне" },
     { id: "services", label: "Услуги" },
+    { id: "free", label: "Бесплатный расклад" },
     { id: "portfolio", label: "Портфолио" },
     { id: "reviews", label: "Отзывы" },
     { id: "contact", label: "Контакты" },
@@ -656,6 +741,283 @@ const Index = () => {
                 </div>
               </div>
             </div>
+          </div>
+        </section>
+      )}
+
+      {/* ─── FREE READING ─── */}
+      {activeSection === "free" && (
+        <section className="min-h-screen pt-24 pb-20">
+          <div className="container mx-auto px-6 md:px-12 max-w-4xl">
+
+            {/* Header */}
+            <div className="text-center mb-16 animate-fade-up">
+              <p className="nav-link mb-4" style={{ color: "var(--gold)" }}>Бесплатно</p>
+              <h2 className="font-cormorant text-5xl md:text-6xl font-light mb-4">
+                Расклад на прошлое
+              </h2>
+              <div className="gold-line mb-6" />
+              <p className="font-montserrat text-sm max-w-lg mx-auto" style={{ color: "var(--cream-dim)", fontWeight: 300 }}>
+                Три карты откроют тайны вашего прошлого — скрытые силы, уроки и события, которые сформировали вас
+              </p>
+            </div>
+
+            {/* INTRO */}
+            {freeStep === "intro" && (
+              <div className="text-center animate-fade-up">
+                <div
+                  className="inline-block p-12 mb-10"
+                  style={{ border: "1px solid var(--dark-border)" }}
+                >
+                  {/* Decorative cards stack */}
+                  <div className="relative w-32 h-44 mx-auto mb-8">
+                    {[2, 1, 0].map((i) => (
+                      <div
+                        key={i}
+                        className="absolute inset-0 flex items-center justify-center font-cormorant text-3xl"
+                        style={{
+                          border: "1px solid var(--gold-dim)",
+                          background: "var(--dark-card)",
+                          transform: `rotate(${(i - 1) * 5}deg) translateY(${i * -4}px)`,
+                          boxShadow: "0 4px 20px rgba(0,0,0,0.5)",
+                          color: "var(--gold-dim)",
+                        }}
+                      >
+                        ✦
+                      </div>
+                    ))}
+                  </div>
+                  <h3 className="font-cormorant text-2xl font-light mb-4">Как это работает</h3>
+                  <div className="space-y-3 text-left max-w-xs mx-auto mb-8">
+                    {[
+                      "Сосредоточьтесь на своём прошлом",
+                      "Перетасуйте колоду мысленно",
+                      "Выберите три карты",
+                      "Получите послание",
+                    ].map((step, i) => (
+                      <div key={step} className="flex items-center gap-3">
+                        <span className="font-cormorant text-lg" style={{ color: "var(--gold)", minWidth: "20px" }}>{i + 1}</span>
+                        <p className="font-montserrat text-xs" style={{ color: "var(--cream-dim)" }}>{step}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <button
+                    className="btn-gold-fill"
+                    onClick={() => setFreeStep("shuffle")}
+                  >
+                    Начать расклад
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* SHUFFLE */}
+            {freeStep === "shuffle" && (
+              <div className="text-center animate-fade-up">
+                <p className="font-cormorant text-xl italic mb-10" style={{ color: "var(--cream-dim)" }}>
+                  Закройте глаза. Думайте о своём прошлом...
+                </p>
+                <div className="relative w-40 h-56 mx-auto mb-10" style={{ perspective: "600px" }}>
+                  {[0, 1, 2, 3, 4].map((i) => (
+                    <div
+                      key={i}
+                      className="absolute inset-0 flex items-center justify-center font-cormorant text-4xl"
+                      style={{
+                        border: "1px solid var(--gold-dim)",
+                        background: "linear-gradient(135deg, var(--dark-card), #1a1410)",
+                        color: "var(--gold-dim)",
+                        transform: shuffling
+                          ? `rotate(${(i - 2) * 15 + Math.sin(i) * 20}deg) translateX(${Math.cos(i) * 30}px) translateY(${Math.sin(i * 2) * 20}px)`
+                          : `rotate(${(i - 2) * 3}deg)`,
+                        transition: shuffling ? `transform ${0.3 + i * 0.1}s ease ${i * 0.05}s` : "transform 0.5s ease",
+                        boxShadow: "0 8px 30px rgba(0,0,0,0.6)",
+                      }}
+                    >
+                      ✦
+                    </div>
+                  ))}
+                </div>
+                <button
+                  className="btn-gold-fill"
+                  onClick={shuffleDeck}
+                  disabled={shuffling}
+                  style={{ opacity: shuffling ? 0.5 : 1 }}
+                >
+                  {shuffling ? "Тасуется..." : "Перетасовать колоду"}
+                </button>
+                {shuffling && (
+                  <p className="font-montserrat text-xs mt-4 animate-fade-in" style={{ color: "var(--gold)", letterSpacing: "0.15em" }}>
+                    КОЛОДА ТАСУЕТСЯ...
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* PICK */}
+            {freeStep === "pick" && (
+              <div className="animate-fade-up">
+                <p className="font-cormorant text-2xl italic text-center mb-2" style={{ color: "var(--cream-dim)" }}>
+                  Переверните три карты
+                </p>
+                <p className="font-montserrat text-xs text-center mb-12" style={{ color: "var(--cream-dim)", opacity: 0.6 }}>
+                  Нажмите на карту, чтобы открыть её
+                </p>
+
+                <div className="grid grid-cols-3 gap-4 md:gap-8 max-w-2xl mx-auto">
+                  {CARD_BACKS.map((label, idx) => {
+                    const card = drawnCards[idx];
+                    const isFlipped = flippedCards[idx];
+                    return (
+                      <div
+                        key={idx}
+                        onClick={() => flipCard(idx)}
+                        className="cursor-pointer"
+                        style={{ perspective: "800px" }}
+                      >
+                        <div
+                          style={{
+                            position: "relative",
+                            width: "100%",
+                            paddingBottom: "150%",
+                            transformStyle: "preserve-3d",
+                            transform: isFlipped ? "rotateY(180deg)" : "rotateY(0deg)",
+                            transition: "transform 0.7s cubic-bezier(0.4, 0, 0.2, 1)",
+                          }}
+                        >
+                          {/* Back */}
+                          <div
+                            style={{
+                              position: "absolute",
+                              inset: 0,
+                              backfaceVisibility: "hidden",
+                              WebkitBackfaceVisibility: "hidden",
+                              border: "1px solid var(--gold-dim)",
+                              background: "linear-gradient(135deg, #1a1410 0%, #0e0b08 100%)",
+                              display: "flex",
+                              flexDirection: "column",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              gap: "8px",
+                              boxShadow: isFlipped ? "none" : "0 0 20px rgba(201,168,76,0.1)",
+                            }}
+                          >
+                            <span className="font-cormorant text-4xl" style={{ color: "var(--gold-dim)" }}>✦</span>
+                            <span className="font-cormorant text-lg" style={{ color: "var(--gold-dim)" }}>{label}</span>
+                            <div style={{ width: "30px", height: "1px", background: "var(--gold-dim)", opacity: 0.4 }} />
+                            <span className="font-montserrat text-xs" style={{ color: "var(--cream-dim)", opacity: 0.4, letterSpacing: "0.1em" }}>
+                              {idx === 0 ? "ПРОШЛОЕ" : idx === 1 ? "ВЛИЯНИЕ" : "УРОК"}
+                            </span>
+                          </div>
+                          {/* Front */}
+                          {card && (
+                            <div
+                              style={{
+                                position: "absolute",
+                                inset: 0,
+                                backfaceVisibility: "hidden",
+                                WebkitBackfaceVisibility: "hidden",
+                                transform: "rotateY(180deg)",
+                                border: "1px solid var(--gold)",
+                                background: "linear-gradient(160deg, #1e1810 0%, #0e0b08 100%)",
+                                display: "flex",
+                                flexDirection: "column",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                padding: "16px 12px",
+                                gap: "8px",
+                                boxShadow: "0 0 30px rgba(201,168,76,0.15)",
+                              }}
+                            >
+                              <span style={{ fontSize: "28px", color: "var(--gold)" }}>{card.symbol}</span>
+                              <div style={{ width: "24px", height: "1px", background: "var(--gold)", opacity: 0.6 }} />
+                              <span className="font-cormorant text-base text-center" style={{ color: "var(--cream)" }}>{card.name}</span>
+                              <span className="font-montserrat text-center" style={{ color: "var(--gold)", fontSize: "9px", letterSpacing: "0.1em" }}>
+                                {idx === 0 ? "ПРОШЛОЕ" : idx === 1 ? "ВЛИЯНИЕ" : "УРОК"}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* REVEAL */}
+            {freeStep === "reveal" && drawnCards.length === 3 && (
+              <div className="animate-fade-up">
+                <p className="font-cormorant text-3xl italic text-center mb-12" style={{ color: "var(--cream-dim)" }}>
+                  Послание карт
+                </p>
+
+                <div className="space-y-6">
+                  {drawnCards.map((card, idx) => (
+                    <div
+                      key={idx}
+                      className="card-mystical p-6 md:p-8 animate-fade-up"
+                      style={{ animationDelay: `${idx * 0.2}s`, opacity: 0 }}
+                    >
+                      <div className="flex flex-col md:flex-row md:items-start gap-6">
+                        {/* Card mini */}
+                        <div
+                          className="flex-shrink-0 w-16 h-24 flex flex-col items-center justify-center gap-1"
+                          style={{ border: "1px solid var(--gold)", background: "linear-gradient(135deg, #1e1810, #0e0b08)" }}
+                        >
+                          <span style={{ fontSize: "20px", color: "var(--gold)" }}>{card.symbol}</span>
+                          <span className="font-cormorant text-xs text-center" style={{ color: "var(--cream)", padding: "0 4px" }}>{card.name}</span>
+                        </div>
+                        {/* Content */}
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-3">
+                            <span className="font-montserrat text-xs" style={{ color: "var(--gold)", letterSpacing: "0.12em" }}>
+                              {idx === 0 ? "ПРОШЛОЕ" : idx === 1 ? "СКРЫТОЕ ВЛИЯНИЕ" : "УРОК"}
+                            </span>
+                            <div style={{ flex: 1, height: "1px", background: "var(--dark-border)" }} />
+                          </div>
+                          <h3 className="font-cormorant text-2xl font-light mb-1">{card.name}</h3>
+                          <p className="font-montserrat text-xs mb-4" style={{ color: "var(--gold-dim)", letterSpacing: "0.08em" }}>
+                            {card.meaning}
+                          </p>
+                          <p className="font-montserrat text-sm leading-relaxed mb-4" style={{ color: "var(--cream-dim)", fontWeight: 300 }}>
+                            {card.description}
+                          </p>
+                          <div className="flex items-start gap-2 pt-4" style={{ borderTop: "1px solid var(--dark-border)" }}>
+                            <span style={{ color: "var(--gold)", fontSize: "10px", marginTop: "2px", flexShrink: 0 }}>✦</span>
+                            <p className="font-cormorant text-base italic" style={{ color: "var(--cream)" }}>
+                              {card.advice}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* CTA block */}
+                <div
+                  className="mt-12 p-8 text-center animate-fade-up"
+                  style={{ border: "1px solid var(--dark-border)", animationDelay: "0.7s", opacity: 0 }}
+                >
+                  <span className="star-deco block mb-4">✦ ✦ ✦</span>
+                  <h3 className="font-cormorant text-3xl font-light mb-3">
+                    Хотите узнать больше?
+                  </h3>
+                  <p className="font-montserrat text-xs mb-8 max-w-sm mx-auto" style={{ color: "var(--cream-dim)" }}>
+                    Полная консультация раскроет детали, которые бесплатный расклад лишь наметил
+                  </p>
+                  <div className="flex flex-wrap justify-center gap-4">
+                    <button className="btn-gold-fill" onClick={() => navigate("contact")}>
+                      Записаться на полный расклад
+                    </button>
+                    <button className="btn-gold" onClick={resetFree}>
+                      Сделать новый расклад
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
           </div>
         </section>
       )}
