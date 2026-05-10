@@ -156,11 +156,13 @@ const Index = () => {
   const [contactForm, setContactForm] = useState({ name: "", email: "", message: "" });
 
   // Free reading state
-  const [freeStep, setFreeStep] = useState<"intro" | "shuffle" | "pick" | "reveal">("intro");
+  const [freeStep, setFreeStep] = useState<"intro" | "form" | "shuffle" | "pick" | "reveal">("intro");
   const [shuffling, setShuffling] = useState(false);
   const [pickedCards, setPickedCards] = useState<number[]>([]);
   const [flippedCards, setFlippedCards] = useState<boolean[]>([false, false, false]);
   const [drawnCards, setDrawnCards] = useState<typeof PAST_CARDS>([]);
+  const [freeForm, setFreeForm] = useState({ name: "", birthdate: "", birthtime: "", birthcity: "" });
+  const [freeFormError, setFreeFormError] = useState("");
 
   const shuffleDeck = () => {
     setShuffling(true);
@@ -184,12 +186,23 @@ const Index = () => {
     }
   };
 
+  const submitFreeForm = () => {
+    if (!freeForm.name.trim() || !freeForm.birthdate || !freeForm.birthcity.trim()) {
+      setFreeFormError("Пожалуйста, заполните имя, дату рождения и город");
+      return;
+    }
+    setFreeFormError("");
+    setFreeStep("shuffle");
+  };
+
   const resetFree = () => {
     setFreeStep("intro");
     setShuffling(false);
     setPickedCards([]);
     setFlippedCards([false, false, false]);
     setDrawnCards([]);
+    setFreeForm({ name: "", birthdate: "", birthtime: "", birthcity: "" });
+    setFreeFormError("");
   };
 
   const navItems: { id: Section; label: string }[] = [
@@ -765,11 +778,7 @@ const Index = () => {
             {/* INTRO */}
             {freeStep === "intro" && (
               <div className="text-center animate-fade-up">
-                <div
-                  className="inline-block p-12 mb-10"
-                  style={{ border: "1px solid var(--dark-border)" }}
-                >
-                  {/* Decorative cards stack */}
+                <div className="inline-block p-10 mb-10" style={{ border: "1px solid var(--dark-border)" }}>
                   <div className="relative w-32 h-44 mx-auto mb-8">
                     {[2, 1, 0].map((i) => (
                       <div
@@ -790,10 +799,10 @@ const Index = () => {
                   <h3 className="font-cormorant text-2xl font-light mb-4">Как это работает</h3>
                   <div className="space-y-3 text-left max-w-xs mx-auto mb-8">
                     {[
-                      "Сосредоточьтесь на своём прошлом",
+                      "Заполните данные о рождении",
                       "Перетасуйте колоду мысленно",
                       "Выберите три карты",
-                      "Получите послание",
+                      "Получите персональное послание",
                     ].map((step, i) => (
                       <div key={step} className="flex items-center gap-3">
                         <span className="font-cormorant text-lg" style={{ color: "var(--gold)", minWidth: "20px" }}>{i + 1}</span>
@@ -801,12 +810,106 @@ const Index = () => {
                       </div>
                     ))}
                   </div>
-                  <button
-                    className="btn-gold-fill"
-                    onClick={() => setFreeStep("shuffle")}
-                  >
-                    Начать расклад
+                  <button className="btn-gold-fill" onClick={() => setFreeStep("form")}>
+                    Получить бесплатный расклад
                   </button>
+                </div>
+              </div>
+            )}
+
+            {/* FORM */}
+            {freeStep === "form" && (
+              <div className="max-w-lg mx-auto animate-fade-up">
+                <div className="p-8 md:p-10" style={{ border: "1px solid var(--dark-border)" }}>
+                  <div className="text-center mb-8">
+                    <span className="font-cormorant text-2xl" style={{ color: "var(--gold)" }}>✦</span>
+                    <h3 className="font-cormorant text-3xl font-light mt-2 mb-2">Данные для расклада</h3>
+                    <p className="font-montserrat text-xs" style={{ color: "var(--cream-dim)", fontWeight: 300 }}>
+                      Карты прошлого читаются через призму момента вашего рождения
+                    </p>
+                  </div>
+
+                  <div className="space-y-7">
+                    {/* Name */}
+                    <div>
+                      <label className="font-montserrat text-xs mb-2 block" style={{ color: "var(--cream-dim)", letterSpacing: "0.12em" }}>
+                        ИМЯ <span style={{ color: "var(--gold)" }}>*</span>
+                      </label>
+                      <input
+                        className="input-mystical"
+                        placeholder="Как вас зовут"
+                        value={freeForm.name}
+                        onChange={(e) => setFreeForm({ ...freeForm, name: e.target.value })}
+                      />
+                    </div>
+
+                    {/* Birthdate */}
+                    <div>
+                      <label className="font-montserrat text-xs mb-2 block" style={{ color: "var(--cream-dim)", letterSpacing: "0.12em" }}>
+                        ДАТА РОЖДЕНИЯ <span style={{ color: "var(--gold)" }}>*</span>
+                      </label>
+                      <input
+                        className="input-mystical"
+                        type="date"
+                        value={freeForm.birthdate}
+                        onChange={(e) => setFreeForm({ ...freeForm, birthdate: e.target.value })}
+                        style={{ colorScheme: "dark" }}
+                      />
+                    </div>
+
+                    {/* Birth time */}
+                    <div>
+                      <label className="font-montserrat text-xs mb-2 block" style={{ color: "var(--cream-dim)", letterSpacing: "0.12em" }}>
+                        ВРЕМЯ РОЖДЕНИЯ
+                        <span className="ml-2 font-montserrat" style={{ color: "var(--cream-dim)", opacity: 0.5, fontSize: "9px", letterSpacing: "0.05em" }}>
+                          (если знаете)
+                        </span>
+                      </label>
+                      <input
+                        className="input-mystical"
+                        type="time"
+                        value={freeForm.birthtime}
+                        onChange={(e) => setFreeForm({ ...freeForm, birthtime: e.target.value })}
+                        style={{ colorScheme: "dark" }}
+                      />
+                    </div>
+
+                    {/* Birth city */}
+                    <div>
+                      <label className="font-montserrat text-xs mb-2 block" style={{ color: "var(--cream-dim)", letterSpacing: "0.12em" }}>
+                        ГОРОД РОЖДЕНИЯ <span style={{ color: "var(--gold)" }}>*</span>
+                      </label>
+                      <input
+                        className="input-mystical"
+                        placeholder="Например: Москва"
+                        value={freeForm.birthcity}
+                        onChange={(e) => setFreeForm({ ...freeForm, birthcity: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  {freeFormError && (
+                    <p className="font-montserrat text-xs mt-4" style={{ color: "#c0392b" }}>
+                      {freeFormError}
+                    </p>
+                  )}
+
+                  <div className="flex gap-3 mt-8">
+                    <button
+                      className="btn-gold"
+                      onClick={() => setFreeStep("intro")}
+                      style={{ flex: "0 0 auto" }}
+                    >
+                      ←
+                    </button>
+                    <button
+                      className="btn-gold-fill"
+                      style={{ flex: 1 }}
+                      onClick={submitFreeForm}
+                    >
+                      Перейти к раскладу
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
@@ -947,9 +1050,21 @@ const Index = () => {
             {/* REVEAL */}
             {freeStep === "reveal" && drawnCards.length === 3 && (
               <div className="animate-fade-up">
-                <p className="font-cormorant text-3xl italic text-center mb-12" style={{ color: "var(--cream-dim)" }}>
-                  Послание карт
-                </p>
+                <div className="text-center mb-12">
+                  <p className="font-montserrat text-xs mb-3" style={{ color: "var(--gold)", letterSpacing: "0.15em" }}>
+                    ПЕРСОНАЛЬНЫЙ РАСКЛАД
+                  </p>
+                  <p className="font-cormorant text-3xl md:text-4xl italic" style={{ color: "var(--cream)" }}>
+                    {freeForm.name ? `Послание для ${freeForm.name}` : "Послание карт"}
+                  </p>
+                  {freeForm.birthdate && (
+                    <p className="font-montserrat text-xs mt-3" style={{ color: "var(--cream-dim)" }}>
+                      {freeForm.birthdate.split("-").reverse().join(".")}
+                      {freeForm.birthtime ? ` • ${freeForm.birthtime}` : ""}
+                      {freeForm.birthcity ? ` • ${freeForm.birthcity}` : ""}
+                    </p>
+                  )}
+                </div>
 
                 <div className="space-y-6">
                   {drawnCards.map((card, idx) => (
