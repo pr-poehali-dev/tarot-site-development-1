@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Icon from "@/components/ui/icon";
 
 const HERO_IMAGE = "https://cdn.poehali.dev/projects/dcc07699-698f-4c75-8dca-b4ccfdc98ed3/files/a97aaff0-c64b-476e-b9a1-bcfb144ba0f6.jpg";
@@ -95,52 +95,7 @@ const TIMES = ["10:00", "11:30", "13:00", "14:30", "16:00", "17:30", "19:00", "2
 
 type Section = "home" | "about" | "services" | "portfolio" | "reviews" | "contact" | "cabinet" | "free";
 
-const PAST_CARDS = [
-  {
-    name: "Луна",
-    symbol: "☽",
-    meaning: "Скрытые страхи и иллюзии",
-    description: "В вашем прошлом присутствовали периоды неопределённости и самообмана. Что-то важное оставалось в тени — возможно, вы сами не хотели видеть правду. Луна указывает на подавленные эмоции и интуицию, которую вы игнорировали.",
-    advice: "Признайте то, что долго скрывали от себя.",
-  },
-  {
-    name: "Колесо Фортуны",
-    symbol: "☸",
-    meaning: "Переломный момент судьбы",
-    description: "Прошлое было насыщено переменами — взлётами и падениями, которые казались неподвластными вам. Эти циклы привели вас именно туда, где вы находитесь сейчас. Ничто не случайно.",
-    advice: "Каждый поворот колеса вёл вас к нынешней точке.",
-  },
-  {
-    name: "Звезда",
-    symbol: "✦",
-    meaning: "Исцеление и надежда",
-    description: "Среди трудностей прошлого была искра света — моменты подлинной надежды и восстановления. Звезда говорит о том, что вы пережили тёмные периоды и сохранили веру в лучшее.",
-    advice: "Ваша стойкость в прошлом — ваша сила в настоящем.",
-  },
-  {
-    name: "Отшельник",
-    symbol: "🕯",
-    meaning: "Путь внутреннего поиска",
-    description: "Вы проходили через периоды одиночества и уединения. Это было необходимо для глубокого самопознания. Отшельник в прошлом — признак мудрости, накопленной в тишине.",
-    advice: "Знания, найденные в уединении, принадлежат только вам.",
-  },
-  {
-    name: "Сила",
-    symbol: "∞",
-    meaning: "Внутренняя мощь и терпение",
-    description: "Прошлое требовало от вас огромной внутренней силы. Вы справлялись с ситуациями, которые казались непосильными. Эта карта — свидетельство вашего мужества.",
-    advice: "Вы сильнее, чем думаете — прошлое это доказало.",
-  },
-  {
-    name: "Жрица",
-    symbol: "𑁍",
-    meaning: "Тайное знание и интуиция",
-    description: "В прошлом вы обладали глубокой интуицией, которую, возможно, не всегда слушали. Жрица хранит тайны — некоторые события были важнее, чем казались на поверхности.",
-    advice: "Вернитесь к тому, что ощущали, но не высказывали.",
-  },
-];
 
-const CARD_BACKS = ["I", "II", "III"];
 
 const Index = () => {
   const [activeSection, setActiveSection] = useState<Section>("home");
@@ -156,86 +111,47 @@ const Index = () => {
   const [contactForm, setContactForm] = useState({ name: "", email: "", message: "" });
 
   // Free reading state
-  const [freeStep, setFreeStep] = useState<"intro" | "form" | "shuffle" | "pick" | "reveal">("intro");
-  const [shuffling, setShuffling] = useState(false);
-  const [pickedCards, setPickedCards] = useState<number[]>([]);
-  const [flippedCards, setFlippedCards] = useState<boolean[]>([false, false, false]);
-  const [drawnCards, setDrawnCards] = useState<typeof PAST_CARDS>([]);
+  const [freeStep, setFreeStep] = useState<"form" | "success">("form");
   const [freeForm, setFreeForm] = useState({ name: "", birthdate: "", birthtime: "", birthcity: "", phone: "" });
   const [freeFormError, setFreeFormError] = useState("");
-  const [freeDeadline, setFreeDeadline] = useState<number | null>(null);
-  const [freeTimeLeft, setFreeTimeLeft] = useState<number>(3600);
-  const [freeExpired, setFreeExpired] = useState(false);
+  const [freeSending, setFreeSending] = useState(false);
 
-  const shuffleDeck = () => {
-    setShuffling(true);
-    setTimeout(() => {
-      setShuffling(false);
-      const shuffled = [...PAST_CARDS].sort(() => Math.random() - 0.5).slice(0, 3);
-      setDrawnCards(shuffled);
-      setFreeStep("pick");
-      setPickedCards([]);
-      setFlippedCards([false, false, false]);
-    }, 1800);
-  };
-
-  const flipCard = (idx: number) => {
-    if (flippedCards[idx]) return;
-    const next = [...flippedCards];
-    next[idx] = true;
-    setFlippedCards(next);
-    if (next.filter(Boolean).length === 3) {
-      setTimeout(() => setFreeStep("reveal"), 400);
-    }
-  };
-
-  useEffect(() => {
-    if (!freeDeadline) return;
-    const tick = setInterval(() => {
-      const left = Math.max(0, Math.round((freeDeadline - Date.now()) / 1000));
-      setFreeTimeLeft(left);
-      if (left === 0) {
-        setFreeExpired(true);
-        clearInterval(tick);
-      }
-    }, 1000);
-    return () => clearInterval(tick);
-  }, [freeDeadline]);
-
-  const submitFreeForm = () => {
+  const submitFreeForm = async () => {
     if (!freeForm.name.trim() || !freeForm.birthdate || !freeForm.birthcity.trim()) {
       setFreeFormError("Пожалуйста, заполните имя, дату рождения и город");
       return;
     }
     if (!freeForm.phone.trim()) {
-      setFreeFormError("Укажите номер телефона — мы свяжемся с вами после расклада");
+      setFreeFormError("Укажите номер телефона — мы свяжемся с вами");
       return;
     }
     setFreeFormError("");
-    const deadline = Date.now() + 60 * 60 * 1000;
-    setFreeDeadline(deadline);
-    setFreeTimeLeft(3600);
-    setFreeExpired(false);
-    setFreeStep("shuffle");
+    setFreeSending(true);
+    try {
+      await fetch("https://formspree.io/f/FORMSPREE_ID", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({
+          name: freeForm.name,
+          phone: freeForm.phone,
+          birthdate: freeForm.birthdate,
+          birthtime: freeForm.birthtime || "не указано",
+          birthcity: freeForm.birthcity,
+          _subject: `Заявка на бесплатный расклад — ${freeForm.name}`,
+        }),
+      });
+    } catch (e) {
+      console.error("Ошибка отправки:", e);
+    }
+    setFreeSending(false);
+    setFreeStep("success");
   };
 
   const resetFree = () => {
-    setFreeStep("intro");
-    setShuffling(false);
-    setPickedCards([]);
-    setFlippedCards([false, false, false]);
-    setDrawnCards([]);
+    setFreeStep("form");
     setFreeForm({ name: "", birthdate: "", birthtime: "", birthcity: "", phone: "" });
     setFreeFormError("");
-    setFreeDeadline(null);
-    setFreeTimeLeft(3600);
-    setFreeExpired(false);
-  };
-
-  const freeTimerDisplay = () => {
-    const m = Math.floor(freeTimeLeft / 60).toString().padStart(2, "0");
-    const s = (freeTimeLeft % 60).toString().padStart(2, "0");
-    return `${m}:${s}`;
+    setFreeSending(false);
   };
 
   const navItems: { id: Section; label: string }[] = [
@@ -937,114 +853,33 @@ const Index = () => {
       {/* ─── FREE READING ─── */}
       {activeSection === "free" && (
         <section className="min-h-screen pt-24 pb-20">
-          <div className="container mx-auto px-6 md:px-12 max-w-4xl">
+          <div className="container mx-auto px-6 md:px-12 max-w-2xl">
 
             {/* Header */}
-            <div className="text-center mb-16 animate-fade-up">
+            <div className="text-center mb-12 animate-fade-up">
               <p className="nav-link mb-4" style={{ color: "var(--gold)" }}>Бесплатно</p>
               <h2 className="font-cormorant text-5xl md:text-6xl font-light mb-4">
                 Расклад на прошлое
               </h2>
               <div className="gold-line mb-6" />
               <p className="font-montserrat text-sm max-w-lg mx-auto" style={{ color: "var(--cream-dim)", fontWeight: 300 }}>
-                Три карты откроют тайны вашего прошлого — скрытые силы, уроки и события, которые сформировали вас
+                Оставьте данные — и я свяжусь с вами лично, чтобы провести персональный расклад Таро
               </p>
             </div>
 
-            {/* TIMER BAR — shown during shuffle/pick/reveal */}
-            {freeDeadline && !freeExpired && ["shuffle", "pick", "reveal"].includes(freeStep) && (
-              <div className="flex items-center justify-center gap-3 mb-10 animate-fade-in">
-                <div
-                  className="flex items-center gap-3 px-5 py-3"
-                  style={{ border: "1px solid var(--gold-dim)", background: "rgba(201,168,76,0.06)" }}
-                >
-                  <Icon name="Clock" size={14} style={{ color: "var(--gold)" }} />
-                  <span className="font-montserrat text-xs" style={{ color: "var(--cream-dim)", letterSpacing: "0.1em" }}>
-                    РАСКЛАД ДЕЙСТВИТЕЛЕН ЕЩЁ
-                  </span>
-                  <span
-                    className="font-cormorant text-xl"
-                    style={{ color: freeTimeLeft < 300 ? "#c0392b" : "var(--gold)", minWidth: "52px", textAlign: "center" }}
-                  >
-                    {freeTimerDisplay()}
-                  </span>
-                </div>
-              </div>
-            )}
-
-            {/* EXPIRED */}
-            {freeExpired && (
-              <div className="text-center animate-fade-up py-10">
-                <div
-                  className="inline-block p-10 max-w-sm"
-                  style={{ border: "1px solid #c0392b", background: "rgba(192,57,43,0.06)" }}
-                >
-                  <Icon name="TimerOff" size={32} style={{ color: "#c0392b", margin: "0 auto 16px" }} />
-                  <h3 className="font-cormorant text-2xl font-light mb-3">Время вышло</h3>
-                  <p className="font-montserrat text-xs mb-6" style={{ color: "var(--cream-dim)", fontWeight: 300, lineHeight: "1.7" }}>
-                    Один час на расклад истёк. Начните заново, чтобы получить своё послание.
-                  </p>
-                  <button className="btn-gold-fill" onClick={resetFree}>Начать заново</button>
-                </div>
-              </div>
-            )}
-
-            {/* INTRO */}
-            {!freeExpired && freeStep === "intro" && (
-              <div className="text-center animate-fade-up">
-                <div className="inline-block p-10 mb-10" style={{ border: "1px solid var(--dark-border)" }}>
-                  <div className="relative w-32 h-44 mx-auto mb-8">
-                    {[2, 1, 0].map((i) => (
-                      <div
-                        key={i}
-                        className="absolute inset-0 flex items-center justify-center font-cormorant text-3xl"
-                        style={{
-                          border: "1px solid var(--gold-dim)",
-                          background: "var(--dark-card)",
-                          transform: `rotate(${(i - 1) * 5}deg) translateY(${i * -4}px)`,
-                          boxShadow: "0 4px 20px rgba(0,0,0,0.5)",
-                          color: "var(--gold-dim)",
-                        }}
-                      >
-                        ✦
-                      </div>
-                    ))}
-                  </div>
-                  <h3 className="font-cormorant text-2xl font-light mb-4">Как это работает</h3>
-                  <div className="space-y-3 text-left max-w-xs mx-auto mb-8">
-                    {[
-                      "Заполните данные о рождении",
-                      "Перетасуйте колоду мысленно",
-                      "Выберите три карты",
-                      "Получите персональное послание",
-                    ].map((step, i) => (
-                      <div key={step} className="flex items-center gap-3">
-                        <span className="font-cormorant text-lg" style={{ color: "var(--gold)", minWidth: "20px" }}>{i + 1}</span>
-                        <p className="font-montserrat text-xs" style={{ color: "var(--cream-dim)" }}>{step}</p>
-                      </div>
-                    ))}
-                  </div>
-                  <button className="btn-gold-fill" onClick={() => setFreeStep("form")}>
-                    Получить бесплатный расклад
-                  </button>
-                </div>
-              </div>
-            )}
-
             {/* FORM */}
-            {!freeExpired && freeStep === "form" && (
-              <div className="max-w-lg mx-auto animate-fade-up">
+            {freeStep === "form" && (
+              <div className="animate-fade-up">
                 <div className="p-8 md:p-10" style={{ border: "1px solid var(--dark-border)" }}>
                   <div className="text-center mb-8">
                     <span className="font-cormorant text-2xl" style={{ color: "var(--gold)" }}>✦</span>
-                    <h3 className="font-cormorant text-3xl font-light mt-2 mb-2">Данные для расклада</h3>
+                    <h3 className="font-cormorant text-3xl font-light mt-2 mb-2">Ваши данные</h3>
                     <p className="font-montserrat text-xs" style={{ color: "var(--cream-dim)", fontWeight: 300 }}>
-                      Карты прошлого читаются через призму момента вашего рождения
+                      Заполните форму — я свяжусь с вами и проведу расклад лично
                     </p>
                   </div>
 
-                  <div className="space-y-7">
-                    {/* Name */}
+                  <div className="space-y-6">
                     <div>
                       <label className="font-montserrat text-xs mb-2 block" style={{ color: "var(--cream-dim)", letterSpacing: "0.12em" }}>
                         ИМЯ <span style={{ color: "var(--gold)" }}>*</span>
@@ -1057,7 +892,19 @@ const Index = () => {
                       />
                     </div>
 
-                    {/* Birthdate */}
+                    <div>
+                      <label className="font-montserrat text-xs mb-2 block" style={{ color: "var(--cream-dim)", letterSpacing: "0.12em" }}>
+                        ТЕЛЕФОН <span style={{ color: "var(--gold)" }}>*</span>
+                      </label>
+                      <input
+                        className="input-mystical"
+                        placeholder="+7 (___) ___-__-__"
+                        type="tel"
+                        value={freeForm.phone}
+                        onChange={(e) => setFreeForm({ ...freeForm, phone: e.target.value })}
+                      />
+                    </div>
+
                     <div>
                       <label className="font-montserrat text-xs mb-2 block" style={{ color: "var(--cream-dim)", letterSpacing: "0.12em" }}>
                         ДАТА РОЖДЕНИЯ <span style={{ color: "var(--gold)" }}>*</span>
@@ -1071,13 +918,10 @@ const Index = () => {
                       />
                     </div>
 
-                    {/* Birth time */}
                     <div>
                       <label className="font-montserrat text-xs mb-2 block" style={{ color: "var(--cream-dim)", letterSpacing: "0.12em" }}>
                         ВРЕМЯ РОЖДЕНИЯ
-                        <span className="ml-2 font-montserrat" style={{ color: "var(--cream-dim)", opacity: 0.5, fontSize: "9px", letterSpacing: "0.05em" }}>
-                          (если знаете)
-                        </span>
+                        <span className="ml-2" style={{ color: "var(--cream-dim)", opacity: 0.5, fontSize: "9px" }}>(если знаете)</span>
                       </label>
                       <input
                         className="input-mystical"
@@ -1088,7 +932,6 @@ const Index = () => {
                       />
                     </div>
 
-                    {/* Birth city */}
                     <div>
                       <label className="font-montserrat text-xs mb-2 block" style={{ color: "var(--cream-dim)", letterSpacing: "0.12em" }}>
                         ГОРОД РОЖДЕНИЯ <span style={{ color: "var(--gold)" }}>*</span>
@@ -1100,23 +943,6 @@ const Index = () => {
                         onChange={(e) => setFreeForm({ ...freeForm, birthcity: e.target.value })}
                       />
                     </div>
-
-                    {/* Phone */}
-                    <div>
-                      <label className="font-montserrat text-xs mb-2 block" style={{ color: "var(--cream-dim)", letterSpacing: "0.12em" }}>
-                        НОМЕР ТЕЛЕФОНА <span style={{ color: "var(--gold)" }}>*</span>
-                      </label>
-                      <input
-                        className="input-mystical"
-                        placeholder="+7 (___) ___-__-__"
-                        type="tel"
-                        value={freeForm.phone}
-                        onChange={(e) => setFreeForm({ ...freeForm, phone: e.target.value })}
-                      />
-                      <p className="font-montserrat mt-2" style={{ fontSize: "10px", color: "var(--cream-dim)", opacity: 0.6 }}>
-                        После расклада мы свяжемся с вами для обсуждения результатов
-                      </p>
-                    </div>
                   </div>
 
                   {freeFormError && (
@@ -1125,244 +951,71 @@ const Index = () => {
                     </p>
                   )}
 
-                  <div className="flex gap-3 mt-8">
-                    <button
-                      className="btn-gold"
-                      onClick={() => setFreeStep("intro")}
-                      style={{ flex: "0 0 auto" }}
-                    >
-                      ←
-                    </button>
-                    <button
-                      className="btn-gold-fill"
-                      style={{ flex: 1 }}
-                      onClick={submitFreeForm}
-                    >
-                      Перейти к раскладу
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
+                  <button
+                    className="btn-gold-fill w-full mt-8"
+                    onClick={submitFreeForm}
+                    disabled={freeSending}
+                    style={{ opacity: freeSending ? 0.6 : 1 }}
+                  >
+                    {freeSending ? "Отправляем..." : "Получить бесплатный расклад"}
+                  </button>
 
-            {/* SHUFFLE */}
-            {!freeExpired && freeStep === "shuffle" && (
-              <div className="text-center animate-fade-up">
-                <p className="font-cormorant text-xl italic mb-10" style={{ color: "var(--cream-dim)" }}>
-                  Закройте глаза. Думайте о своём прошлом...
-                </p>
-                <div className="relative w-40 h-56 mx-auto mb-10" style={{ perspective: "600px" }}>
-                  {[0, 1, 2, 3, 4].map((i) => (
-                    <div
-                      key={i}
-                      className="absolute inset-0 flex items-center justify-center font-cormorant text-4xl"
-                      style={{
-                        border: "1px solid var(--gold-dim)",
-                        background: "linear-gradient(135deg, var(--dark-card), #1a1410)",
-                        color: "var(--gold-dim)",
-                        transform: shuffling
-                          ? `rotate(${(i - 2) * 15 + Math.sin(i) * 20}deg) translateX(${Math.cos(i) * 30}px) translateY(${Math.sin(i * 2) * 20}px)`
-                          : `rotate(${(i - 2) * 3}deg)`,
-                        transition: shuffling ? `transform ${0.3 + i * 0.1}s ease ${i * 0.05}s` : "transform 0.5s ease",
-                        boxShadow: "0 8px 30px rgba(0,0,0,0.6)",
-                      }}
-                    >
-                      ✦
-                    </div>
-                  ))}
-                </div>
-                <button
-                  className="btn-gold-fill"
-                  onClick={shuffleDeck}
-                  disabled={shuffling}
-                  style={{ opacity: shuffling ? 0.5 : 1 }}
-                >
-                  {shuffling ? "Тасуется..." : "Перетасовать колоду"}
-                </button>
-                {shuffling && (
-                  <p className="font-montserrat text-xs mt-4 animate-fade-in" style={{ color: "var(--gold)", letterSpacing: "0.15em" }}>
-                    КОЛОДА ТАСУЕТСЯ...
+                  <p className="font-montserrat text-center mt-4" style={{ fontSize: "10px", color: "var(--cream-dim)", opacity: 0.5 }}>
+                    Нажимая кнопку, вы соглашаетесь на обработку персональных данных
                   </p>
-                )}
+                </div>
               </div>
             )}
 
-            {/* PICK */}
-            {!freeExpired && freeStep === "pick" && (
+            {/* SUCCESS */}
+            {freeStep === "success" && (
               <div className="animate-fade-up">
-                <p className="font-cormorant text-2xl italic text-center mb-2" style={{ color: "var(--cream-dim)" }}>
-                  Переверните три карты
-                </p>
-                <p className="font-montserrat text-xs text-center mb-12" style={{ color: "var(--cream-dim)", opacity: 0.6 }}>
-                  Нажмите на карту, чтобы открыть её
-                </p>
-
-                <div className="grid grid-cols-3 gap-4 md:gap-8 max-w-2xl mx-auto">
-                  {CARD_BACKS.map((label, idx) => {
-                    const card = drawnCards[idx];
-                    const isFlipped = flippedCards[idx];
-                    return (
-                      <div
-                        key={idx}
-                        onClick={() => flipCard(idx)}
-                        className="cursor-pointer"
-                        style={{ perspective: "800px" }}
-                      >
-                        <div
-                          style={{
-                            position: "relative",
-                            width: "100%",
-                            paddingBottom: "150%",
-                            transformStyle: "preserve-3d",
-                            transform: isFlipped ? "rotateY(180deg)" : "rotateY(0deg)",
-                            transition: "transform 0.7s cubic-bezier(0.4, 0, 0.2, 1)",
-                          }}
-                        >
-                          {/* Back */}
-                          <div
-                            style={{
-                              position: "absolute",
-                              inset: 0,
-                              backfaceVisibility: "hidden",
-                              WebkitBackfaceVisibility: "hidden",
-                              border: "1px solid var(--gold-dim)",
-                              background: "linear-gradient(135deg, #1a1410 0%, #0e0b08 100%)",
-                              display: "flex",
-                              flexDirection: "column",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              gap: "8px",
-                              boxShadow: isFlipped ? "none" : "0 0 20px rgba(201,168,76,0.1)",
-                            }}
-                          >
-                            <span className="font-cormorant text-4xl" style={{ color: "var(--gold-dim)" }}>✦</span>
-                            <span className="font-cormorant text-lg" style={{ color: "var(--gold-dim)" }}>{label}</span>
-                            <div style={{ width: "30px", height: "1px", background: "var(--gold-dim)", opacity: 0.4 }} />
-                            <span className="font-montserrat text-xs" style={{ color: "var(--cream-dim)", opacity: 0.4, letterSpacing: "0.1em" }}>
-                              {idx === 0 ? "ПРОШЛОЕ" : idx === 1 ? "ВЛИЯНИЕ" : "УРОК"}
-                            </span>
-                          </div>
-                          {/* Front */}
-                          {card && (
-                            <div
-                              style={{
-                                position: "absolute",
-                                inset: 0,
-                                backfaceVisibility: "hidden",
-                                WebkitBackfaceVisibility: "hidden",
-                                transform: "rotateY(180deg)",
-                                border: "1px solid var(--gold)",
-                                background: "linear-gradient(160deg, #1e1810 0%, #0e0b08 100%)",
-                                display: "flex",
-                                flexDirection: "column",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                padding: "16px 12px",
-                                gap: "8px",
-                                boxShadow: "0 0 30px rgba(201,168,76,0.15)",
-                              }}
-                            >
-                              <span style={{ fontSize: "28px", color: "var(--gold)" }}>{card.symbol}</span>
-                              <div style={{ width: "24px", height: "1px", background: "var(--gold)", opacity: 0.6 }} />
-                              <span className="font-cormorant text-base text-center" style={{ color: "var(--cream)" }}>{card.name}</span>
-                              <span className="font-montserrat text-center" style={{ color: "var(--gold)", fontSize: "9px", letterSpacing: "0.1em" }}>
-                                {idx === 0 ? "ПРОШЛОЕ" : idx === 1 ? "ВЛИЯНИЕ" : "УРОК"}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* REVEAL */}
-            {!freeExpired && freeStep === "reveal" && drawnCards.length === 3 && (
-              <div className="animate-fade-up">
-                <div className="text-center mb-12">
-                  <p className="font-montserrat text-xs mb-3" style={{ color: "var(--gold)", letterSpacing: "0.15em" }}>
-                    ПЕРСОНАЛЬНЫЙ РАСКЛАД
-                  </p>
-                  <p className="font-cormorant text-3xl md:text-4xl italic" style={{ color: "var(--cream)" }}>
-                    {freeForm.name ? `Послание для ${freeForm.name}` : "Послание карт"}
-                  </p>
-                  {freeForm.birthdate && (
-                    <p className="font-montserrat text-xs mt-3" style={{ color: "var(--cream-dim)" }}>
-                      {freeForm.birthdate.split("-").reverse().join(".")}
-                      {freeForm.birthtime ? ` • ${freeForm.birthtime}` : ""}
-                      {freeForm.birthcity ? ` • ${freeForm.birthcity}` : ""}
+                <div className="p-10 md:p-14 text-center" style={{ border: "1px solid var(--gold-dim)" }}>
+                  {/* Corner accents */}
+                  <div className="relative">
+                    <span className="font-cormorant text-5xl block mb-6" style={{ color: "var(--gold)" }}>✦</span>
+                    <h3 className="font-cormorant text-4xl font-light mb-4">
+                      Заявка принята
+                    </h3>
+                    <div className="gold-line mb-6" />
+                    <p className="font-montserrat text-sm mb-8 max-w-sm mx-auto" style={{ color: "var(--cream-dim)", fontWeight: 300, lineHeight: "1.8" }}>
+                      {freeForm.name ? `${freeForm.name}, я` : "Я"} свяжусь с вами по номеру <span style={{ color: "var(--gold)" }}>{freeForm.phone}</span> в ближайшее время, чтобы провести персональный расклад Таро.
                     </p>
-                  )}
-                </div>
 
-                <div className="space-y-6">
-                  {drawnCards.map((card, idx) => (
                     <div
-                      key={idx}
-                      className="card-mystical p-6 md:p-8 animate-fade-up"
-                      style={{ animationDelay: `${idx * 0.2}s`, opacity: 0 }}
+                      className="inline-flex flex-col gap-4 text-left p-6 mb-8"
+                      style={{ border: "1px solid var(--dark-border)", background: "rgba(201,168,76,0.03)" }}
                     >
-                      <div className="flex flex-col md:flex-row md:items-start gap-6">
-                        {/* Card mini */}
-                        <div
-                          className="flex-shrink-0 w-16 h-24 flex flex-col items-center justify-center gap-1"
-                          style={{ border: "1px solid var(--gold)", background: "linear-gradient(135deg, #1e1810, #0e0b08)" }}
-                        >
-                          <span style={{ fontSize: "20px", color: "var(--gold)" }}>{card.symbol}</span>
-                          <span className="font-cormorant text-xs text-center" style={{ color: "var(--cream)", padding: "0 4px" }}>{card.name}</span>
+                      {[
+                        { label: "Имя", value: freeForm.name },
+                        { label: "Телефон", value: freeForm.phone },
+                        { label: "Дата рождения", value: freeForm.birthdate.split("-").reverse().join(".") },
+                        ...(freeForm.birthtime ? [{ label: "Время рождения", value: freeForm.birthtime }] : []),
+                        { label: "Город рождения", value: freeForm.birthcity },
+                      ].map((row) => (
+                        <div key={row.label} className="flex gap-6 items-baseline">
+                          <span className="font-montserrat text-xs w-32 flex-shrink-0" style={{ color: "var(--gold)", letterSpacing: "0.1em" }}>
+                            {row.label.toUpperCase()}
+                          </span>
+                          <span className="font-cormorant text-lg" style={{ color: "var(--cream)" }}>{row.value}</span>
                         </div>
-                        {/* Content */}
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-3">
-                            <span className="font-montserrat text-xs" style={{ color: "var(--gold)", letterSpacing: "0.12em" }}>
-                              {idx === 0 ? "ПРОШЛОЕ" : idx === 1 ? "СКРЫТОЕ ВЛИЯНИЕ" : "УРОК"}
-                            </span>
-                            <div style={{ flex: 1, height: "1px", background: "var(--dark-border)" }} />
-                          </div>
-                          <h3 className="font-cormorant text-2xl font-light mb-1">{card.name}</h3>
-                          <p className="font-montserrat text-xs mb-4" style={{ color: "var(--gold-dim)", letterSpacing: "0.08em" }}>
-                            {card.meaning}
-                          </p>
-                          <p className="font-montserrat text-sm leading-relaxed mb-4" style={{ color: "var(--cream-dim)", fontWeight: 300 }}>
-                            {card.description}
-                          </p>
-                          <div className="flex items-start gap-2 pt-4" style={{ borderTop: "1px solid var(--dark-border)" }}>
-                            <span style={{ color: "var(--gold)", fontSize: "10px", marginTop: "2px", flexShrink: 0 }}>✦</span>
-                            <p className="font-cormorant text-base italic" style={{ color: "var(--cream)" }}>
-                              {card.advice}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
 
-                {/* CTA block */}
-                <div
-                  className="mt-12 p-8 text-center animate-fade-up"
-                  style={{ border: "1px solid var(--dark-border)", animationDelay: "0.7s", opacity: 0 }}
-                >
-                  <span className="star-deco block mb-4">✦ ✦ ✦</span>
-                  <h3 className="font-cormorant text-3xl font-light mb-3">
-                    Хотите узнать больше?
-                  </h3>
-                  <p className="font-montserrat text-xs mb-8 max-w-sm mx-auto" style={{ color: "var(--cream-dim)" }}>
-                    Полная консультация раскроет детали, которые бесплатный расклад лишь наметил
-                  </p>
-                  <div className="flex flex-wrap justify-center gap-4">
-                    <button className="btn-gold-fill" onClick={() => navigate("contact")}>
-                      Записаться на полный расклад
-                    </button>
-                    <button className="btn-gold" onClick={resetFree}>
-                      Сделать новый расклад
-                    </button>
+                    <div className="flex flex-wrap justify-center gap-4">
+                      <button className="btn-gold-fill" onClick={() => navigate("contact")}>
+                        Записаться на консультацию
+                      </button>
+                      <button className="btn-gold" onClick={resetFree}>
+                        Отправить новую заявку
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
             )}
+
+
 
           </div>
         </section>
